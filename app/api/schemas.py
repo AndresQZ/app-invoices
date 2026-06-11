@@ -1,5 +1,8 @@
 from pydantic import BaseModel
 from datetime import datetime
+from typing import Generic, List, TypeVar
+
+T = TypeVar("T")
 
 class InvoiceBase(BaseModel):
     invoice_number: str
@@ -15,3 +18,10 @@ class InvoiceResponse(InvoiceBase):
     id: int
 
     model_config = {"from_attributes": True}
+
+
+class PaginatedResponse(BaseModel, Generic[T]):
+    total: int
+    page: int
+    page_size: int
+    items: List[T]

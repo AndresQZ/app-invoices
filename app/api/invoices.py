@@ -3,34 +3,43 @@ import logging
 
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from typing import List
 
 from app.db.database import get_db
 from app.db.models import Invoice
-from app.api.schemas import InvoiceCreate, InvoiceResponse
+from app.api.schemas import InvoiceCreate, InvoiceResponse, PaginatedResponse
 logger = logging.getLogger(__name__)
 
 
 router = APIRouter(prefix="/invoices", tags=["Invoices"])
 
 
-@router.get("/", response_model=List[InvoiceResponse])
+@router.get("/", response_model=PaginatedResponse[InvoiceResponse])
 async def get_invoices(
     startDate: datetime | None = Query(default=None),
     endDate: datetime | None = Query(default=None),
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=100),
     db: AsyncSession = Depends(get_db)
 ):
-    logger.info(f"retrived_invoices: startDate={startDate}, endDate={endDate}")
+    logger.info(f"retrived_invoices: startDate={startDate}, endDate={endDate}, page={page}, page_size={page_size}")
     query = select(Invoice)
     if startDate:
         query = query.filter(Invoice.invoice_date >= startDate)
     if endDate:
         query = query.filter(Invoice.invoice_date <= endDate)
 
-    result = await db.execute(query)
-    return result.scalars().all()
+    total = await db.scalar(select(func.count()).select_from(query.subquery()))
+    result = await db.execute(query.offset((page - 1) * page_size).limit(page_size))
+
+    return PaginatedResponse(
+        total=total,
+        page=page,
+        page_size=page_size,
+        items=result.scalars().all()
+    )
 
 @router.post("/", response_model=InvoiceResponse, status_code=status.HTTP_201_CREATED)
 async def create_invoice(invoice_data: InvoiceCreate, db: AsyncSession = Depends(get_db)):
