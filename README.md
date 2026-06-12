@@ -35,6 +35,12 @@ POSTGRES_PASSWORD=your_super_secret_password
 POSTGRES_SERVER=127.0.0.1
 POSTGRES_PORT=5432
 POSTGRES_DB=app_invoices
+
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USER=your_smtp_user
+SMTP_PASSWORD=your_smtp_password
+EMAIL_TO=recipient@example.com
 ```
 
 ### 4. Start the API

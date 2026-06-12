@@ -1,7 +1,12 @@
+import logging
+
 import aiosmtplib
 from email.mime.text import MIMEText
 
 from app.core.config import settings
+
+logger = logging.getLogger(__name__)
+
 
 
 class EmailService:
@@ -10,6 +15,8 @@ class EmailService:
         message["From"] = settings.SMTP_USER
         message["To"] = settings.EMAIL_TO
         message["Subject"] = subject
+
+        logger.info(f'send_email_to:{settings.EMAIL_TO}')
 
         await aiosmtplib.send(
             message,
