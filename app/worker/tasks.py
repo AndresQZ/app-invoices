@@ -1,21 +1,15 @@
-import logging
+import asyncio
 
+from app.db.database import AsyncSessionLocal
 from app.db.repositories import InvoiceRepository
-from app.schemas import TopDayResponse
-from app.services.email_service import EmailService
-
-logger = logging.getLogger(__name__)
+from app.worker.celery_app import celery_app
+from app.worker.worker import Worker
 
 
-class Worker:
-
-    @staticmethod
-    async def reporting(repo: InvoiceRepository):
-        email_service = EmailService()
-        rows = await repo.get_top_days(10)
-        logger.info(f"top 10 days: {rows}")
-        top = [TopDayResponse(fecha=str(r.fecha), cantidad_facturas=r.cantidad_facturas, total_diario=r.total_diario) for r in rows]
-        label = "<strong>Resumen de días con mayor ventas</strong><br>"
-        body = label + "<br>".join(f"fecha: {r.fecha}: No. facturas: {r.cantidad_facturas}, Monto: ${r.total_diario}" for r in top)
-        await email_service.send("Dias con mayor venta", body)
-        return top
+@celery_app.task(name="app.worker.tasks.reporting")
+def reporting():
+    async def run():
+        async with AsyncSessionLocal() as session:
+            repo = InvoiceRepository(session)
+            return await Worker.reporting(repo)
+    asyncio.run(run())
