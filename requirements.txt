@@ -9,3 +9,5 @@ greenlet
 
 celery
 redis
+
+aiosmtplib

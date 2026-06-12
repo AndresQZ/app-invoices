@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.database import get_db
 from app.db.repositories import InvoiceRepository
 from app.schemas import InvoiceCreate, InvoiceResponse, PaginatedResponse, TopDayResponse
+from app.worker.tasks import Worker
 
 logger = logging.getLogger(__name__)
 
@@ -21,10 +22,9 @@ def get_repo(db: AsyncSession = Depends(get_db)) -> InvoiceRepository:
 async def get_top_days(
     limit: int = Query(default=10, ge=1, le=100),
     repo: InvoiceRepository = Depends(get_repo),
-):
-    logger.info(f"get_top_days: limit={limit}")
-    rows = await repo.get_top_days(limit=limit)
-    return [TopDayResponse(fecha=str(r.fecha), cantidad_facturas=r.cantidad_facturas, total_diario=r.total_diario) for r in rows]
+):  
+    return await Worker.reporting(repo)
+
 
 
 @router.get("/", response_model=PaginatedResponse[InvoiceResponse])
