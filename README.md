@@ -66,6 +66,22 @@ GET /invoices/?startDate=2024-01-01T00:00:00&endDate=2024-12-31T23:59:59
 
 ---
 
+## Testing
+
+Install dev dependencies:
+
+```bash
+make install-dev
+```
+
+Run all tests:
+
+```bash
+make test
+```
+
+
+---
 
 ## Project Structure
 
