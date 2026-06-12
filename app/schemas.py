@@ -25,3 +25,8 @@ class PaginatedResponse(BaseModel, Generic[T]):
     page: int
     page_size: int
     items: List[T]
+
+class TopDayResponse(BaseModel):
+    fecha: str
+    cantidad_facturas: int
+    total_diario: float
